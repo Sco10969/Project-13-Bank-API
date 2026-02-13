@@ -110,6 +110,252 @@ paths:
           description: Invalid Fields
         '500':
           description: Internal Server Error
+  /user/accounts/{accountId}/transactions:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions Module
+      summary: List account transactions for a month
+      description: Returns all transactions for the requested account. If month is omitted, the current month is used.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+          type: string
+        - in: path
+          name: accountId
+          description: Unique account identifier
+          required: true
+          type: string
+        - in: query
+          name: month
+          description: Month to filter transactions (YYYY-MM), ex. 2026-02
+          required: false
+          type: string
+          pattern: '^[0-9]{4}-(0[1-9]|1[0-2])$'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transactions successfully retrieved
+          schema:
+            $ref: '#/definitions/TransactionListResponse'
+        '400':
+          description: Invalid accountId or month format
+        '401':
+          description: Unauthorized - token missing or invalid
+        '403':
+          description: Forbidden - account does not belong to authenticated user
+        '404':
+          description: Account not found
+        '500':
+          description: Internal Server Error
+  /user/accounts/{accountId}/transactions/{transactionId}:
+    get:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions Module
+      summary: Get transaction details
+      description: Returns full details for one transaction belonging to an account.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+          type: string
+        - in: path
+          name: accountId
+          description: Unique account identifier
+          required: true
+          type: string
+        - in: path
+          name: transactionId
+          description: Unique transaction identifier
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction details successfully retrieved
+          schema:
+            $ref: '#/definitions/TransactionDetailResponse'
+        '400':
+          description: Invalid identifiers
+        '401':
+          description: Unauthorized - token missing or invalid
+        '403':
+          description: Forbidden - transaction does not belong to authenticated user
+        '404':
+          description: Account or transaction not found
+        '500':
+          description: Internal Server Error
+  /user/accounts/{accountId}/transactions/{transactionId}/metadata:
+    post:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions Module
+      summary: Add metadata to a transaction
+      description: Adds custom metadata on a transaction (for example category and notes).
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+          type: string
+        - in: path
+          name: accountId
+          description: Unique account identifier
+          required: true
+          type: string
+        - in: path
+          name: transactionId
+          description: Unique transaction identifier
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: Metadata payload
+          required: true
+          schema:
+            $ref: '#/definitions/TransactionMetadataCreate'
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Transaction metadata successfully created
+          schema:
+            $ref: '#/definitions/TransactionMetadataResponse'
+          examples:
+            application/json:
+              status: 201
+              message: Transaction metadata successfully created
+              body:
+                transactionId: tr_98fce1
+                category: Food
+                notes: Lunch with client
+        '400':
+          description: Invalid payload
+        '401':
+          description: Unauthorized - token missing or invalid
+        '403':
+          description: Forbidden - transaction does not belong to authenticated user
+        '404':
+          description: Account or transaction not found
+        '500':
+          description: Internal Server Error
+    put:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions Module
+      summary: Update transaction metadata
+      description: Updates existing transaction metadata (category and/or notes).
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+          type: string
+        - in: path
+          name: accountId
+          description: Unique account identifier
+          required: true
+          type: string
+        - in: path
+          name: transactionId
+          description: Unique transaction identifier
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: Metadata payload
+          required: true
+          schema:
+            $ref: '#/definitions/TransactionMetadataUpdate'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction metadata successfully updated
+          schema:
+            $ref: '#/definitions/TransactionMetadataResponse'
+          examples:
+            application/json:
+              status: 200
+              message: Transaction metadata successfully updated
+              body:
+                transactionId: tr_98fce1
+                category: Business
+                notes: Team lunch in Paris
+        '400':
+          description: Invalid payload
+        '401':
+          description: Unauthorized - token missing or invalid
+        '403':
+          description: Forbidden - transaction does not belong to authenticated user
+        '404':
+          description: Account or transaction not found
+        '500':
+          description: Internal Server Error
+    delete:
+      security:
+        - Bearer: []
+      tags:
+        - Transactions Module
+      summary: Delete transaction metadata fields
+      description: Deletes one or more metadata fields from a transaction.
+      parameters:
+        - in: header
+          name: Authorization
+          description: Attach Bearer JWT token
+          required: true
+          type: string
+        - in: path
+          name: accountId
+          description: Unique account identifier
+          required: true
+          type: string
+        - in: path
+          name: transactionId
+          description: Unique transaction identifier
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: Metadata fields to delete
+          required: true
+          schema:
+            $ref: '#/definitions/TransactionMetadataDelete'
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Transaction metadata successfully deleted
+          schema:
+            $ref: '#/definitions/TransactionMetadataResponse'
+          examples:
+            application/json:
+              status: 200
+              message: Transaction metadata successfully deleted
+              body:
+                transactionId: tr_98fce1
+                category: null
+                notes: null
+        '400':
+          description: Invalid payload
+        '401':
+          description: Unauthorized - token missing or invalid
+        '403':
+          description: Forbidden - transaction does not belong to authenticated user
+        '404':
+          description: Account or transaction not found
+        '500':
+          description: Internal Server Error
 securityDefinitions:
   Bearer:
     type: apiKey
@@ -164,3 +410,143 @@ definitions:
         type: string
       lastName:
         type: string
+  TransactionSummary:
+    type: object
+    properties:
+      transactionId:
+        type: string
+        example: tr_98fce1
+      date:
+        type: string
+        format: date
+        example: '2026-02-13'
+      description:
+        type: string
+        example: Golden Sun Bakery
+      amount:
+        type: number
+        format: double
+        example: -18.25
+      type:
+        type: string
+        enum:
+          - debit
+          - credit
+      category:
+        type: string
+        example: Food
+      notes:
+        type: string
+        example: Lunch with client
+  TransactionDetail:
+    type: object
+    properties:
+      transactionId:
+        type: string
+      accountId:
+        type: string
+      date:
+        type: string
+        format: date
+      description:
+        type: string
+      amount:
+        type: number
+        format: double
+      type:
+        type: string
+        enum:
+          - debit
+          - credit
+      category:
+        type: string
+      notes:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  TransactionListResponse:
+    type: object
+    properties:
+      status:
+        type: integer
+      message:
+        type: string
+      body:
+        type: object
+        properties:
+          accountId:
+            type: string
+          month:
+            type: string
+            example: '2026-02'
+          transactions:
+            type: array
+            items:
+              $ref: '#/definitions/TransactionSummary'
+  TransactionDetailResponse:
+    type: object
+    properties:
+      status:
+        type: integer
+      message:
+        type: string
+      body:
+        $ref: '#/definitions/TransactionDetail'
+  TransactionMetadataCreate:
+    type: object
+    required:
+      - category
+    properties:
+      category:
+        type: string
+        maxLength: 100
+        example: Food
+      notes:
+        type: string
+        maxLength: 500
+        example: Lunch with client
+  TransactionMetadataUpdate:
+    type: object
+    properties:
+      category:
+        type: string
+        maxLength: 100
+        example: Business
+      notes:
+        type: string
+        maxLength: 500
+        example: Team lunch in Paris
+  TransactionMetadataDelete:
+    type: object
+    required:
+      - fields
+    properties:
+      fields:
+        type: array
+        description: Metadata fields to delete
+        minItems: 1
+        items:
+          type: string
+          enum:
+            - category
+            - notes
+  TransactionMetadataResponse:
+    type: object
+    properties:
+      status:
+        type: integer
+      message:
+        type: string
+      body:
+        type: object
+        properties:
+          transactionId:
+            type: string
+          category:
+            type: string
+          notes:
+            type: string
