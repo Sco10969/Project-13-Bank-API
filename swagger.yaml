@@ -9,6 +9,7 @@ basePath: /api/v1
 schemes:
   - http
 paths:
+  # Phase 1 endpoints (authentification / profil) existants
   /user/login:
     post:
       tags:
@@ -110,6 +111,7 @@ paths:
           description: Invalid Fields
         '500':
           description: Internal Server Error
+  # Phase 2 : liste mensuelle des transactions, groupee par compte
   /user/accounts/{accountId}/transactions:
     get:
       security:
@@ -131,6 +133,7 @@ paths:
           type: string
         - in: query
           name: month
+          # Format choisi pour filtrer le mois (ex: 2026-02)
           description: Month to filter transactions (YYYY-MM), ex. 2026-02
           required: false
           type: string
@@ -152,6 +155,7 @@ paths:
           description: Account not found
         '500':
           description: Internal Server Error
+  # Phase 2 : detail d'une transaction dans une vue dediee
   /user/accounts/{accountId}/transactions/{transactionId}:
     get:
       security:
@@ -193,6 +197,8 @@ paths:
           description: Account or transaction not found
         '500':
           description: Internal Server Error
+  # Phase 2 : ajout / modification / suppression d'infos utilisateur
+  # sur une transaction (categorie, notes), sans toucher aux donnees bancaires brutes
   /user/accounts/{accountId}/transactions/{transactionId}/metadata:
     post:
       security:
@@ -357,11 +363,13 @@ paths:
         '500':
           description: Internal Server Error
 securityDefinitions:
+  # JWT requis pour les routes protegees
   Bearer:
     type: apiKey
     name: Authorization
     in: header
 definitions:
+  # Schemas Phase 1
   User:
     properties:
       email:
@@ -410,6 +418,7 @@ definitions:
         type: string
       lastName:
         type: string
+  # Schemas Phase 2 Transactions
   TransactionSummary:
     type: object
     properties:
